@@ -103,6 +103,14 @@
                                     <label for="note-link">Google Drive Link</label>
                                     <input type="url" id="note-link" name="note-link" required placeholder="https://drive.google.com/...">
                                 </div>
+                                <div id="upload-status" class="upload-status hidden">
+                                    <div class="status-icon">
+                                        <i class="fas fa-circle-notch fa-spin status-loading"></i>
+                                        <i class="fas fa-check-circle status-success hidden"></i>
+                                        <i class="fas fa-times-circle status-error hidden"></i>
+                                    </div>
+                                    <div class="status-message">Processing...</div>
+                                </div>
                                 <button type="submit" class="btn primary-btn">Add Note <i class="fas fa-plus"></i></button>
                             </form>
                         </div>

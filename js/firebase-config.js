@@ -1,11 +1,12 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAT9_9uP7TrAjEKcl6cwkZh9vObpzJKk5s",
-    authDomain: "kknotes-3f24e.firebaseapp.com",
-    databaseURL: "https://kknotes-3f24e-default-rtdb.firebaseio.com",
-    projectId: "kknotes-3f24e", 
-    storageBucket: "kknotes-3f24e.appspot.com",
-    appId: "1:254324523644:web:85d5e04ee01b85c4a5a902"
+    apiKey: "AIzaSyAlAY9u4uXiY0ig7qu-9U9_34Atpw7diZg",
+    authDomain: "kknotes-538ee.firebaseapp.com",
+    projectId: "kknotes-538ee",
+    storageBucket: "kknotes-538ee.firebasestorage.app",
+    messagingSenderId: "525574938875",
+    appId: "1:525574938875:web:062f24c6a0df05fff5905e",
+    databaseURL: "https://kknotes-538ee-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase

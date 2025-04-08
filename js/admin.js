@@ -207,6 +207,20 @@ function handleAddNote(event) {
     submitBtn.textContent = 'Adding...';
     submitBtn.disabled = true;
     
+    // Show status
+    const uploadStatus = document.getElementById('upload-status');
+    const statusMessage = uploadStatus.querySelector('.status-message');
+    const loadingIcon = uploadStatus.querySelector('.status-loading');
+    const successIcon = uploadStatus.querySelector('.status-success');
+    const errorIcon = uploadStatus.querySelector('.status-error');
+    
+    // Set initial status
+    uploadStatus.classList.remove('hidden');
+    loadingIcon.classList.remove('hidden');
+    successIcon.classList.add('hidden');
+    errorIcon.classList.add('hidden');
+    statusMessage.textContent = 'Uploading note to Firebase...';
+    
     // Save to Firebase
     const newNoteRef = database.ref(`notes/${currentAdminSemester}`).push();
     
@@ -219,23 +233,39 @@ function handleAddNote(event) {
         // Reset form
         addNoteForm.reset();
         
+        // Update status
+        loadingIcon.classList.add('hidden');
+        successIcon.classList.remove('hidden');
+        statusMessage.textContent = 'Note added successfully!';
+        
         // Reset button
         submitBtn.textContent = originalBtnText;
         submitBtn.disabled = false;
         
-        // Show success message
-        alert('Note added successfully!');
+        // Hide status after delay
+        setTimeout(() => {
+            uploadStatus.classList.add('hidden');
+        }, 3000);
         
         // Reload notes
         loadAdminNotes(currentAdminSemester);
     })
     .catch(error => {
         console.error('Error adding note:', error);
-        alert('Error adding note: ' + error.message);
+        
+        // Update status
+        loadingIcon.classList.add('hidden');
+        errorIcon.classList.remove('hidden');
+        statusMessage.textContent = 'Error: ' + error.message;
         
         // Reset button
         submitBtn.textContent = originalBtnText;
         submitBtn.disabled = false;
+        
+        // Hide status after delay
+        setTimeout(() => {
+            uploadStatus.classList.add('hidden');
+        }, 5000);
     });
 }
 
