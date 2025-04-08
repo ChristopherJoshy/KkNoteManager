@@ -42,6 +42,10 @@ function loadAdminNotes(semester) {
     // Update title
     currentSemTitle.textContent = `Semester ${semester.substring(1)} Notes`;
     
+    // Log for debugging
+    console.log(`Admin: Loading notes for semester ${semester}`);
+    console.log(`Database path: notes/${semester}`);
+    
     // Set a timeout to detect long-running requests
     const timeoutId = setTimeout(() => {
         console.warn('Firebase admin request taking longer than expected, possible connection issues');
@@ -54,17 +58,28 @@ function loadAdminNotes(semester) {
         }
     }, 6000);
     
-    // Get notes from Firebase
+    // Get notes from Firebase (without cache to ensure fresh data)
     database.ref(`notes/${semester}`).once('value')
         .then(snapshot => {
             clearTimeout(timeoutId);
             const notes = snapshot.val();
+            
+            // Detailed logging for debugging
             console.log(`Admin: loaded notes for ${semester}`, notes ? Object.keys(notes).length : 0, 'entries');
+            if (notes) {
+                console.log('Note IDs:', Object.keys(notes));
+                console.log('Sample note data:', Object.values(notes)[0]);
+            } else {
+                console.log('No notes found for this semester');
+            }
+            
             displayAdminNotes(notes, semester);
         })
         .catch(error => {
             clearTimeout(timeoutId);
             console.error('Error loading notes for admin:', error);
+            console.error('Error details:', error.code, error.message);
+            
             displayAdminError();
             
             // Add a retry button
@@ -295,9 +310,17 @@ function openEditModal(note, noteId, semester) {
                     <label for="edit-note-link">Google Drive Link</label>
                     <input type="url" id="edit-note-link" name="edit-note-link" value="${note.link}" required>
                 </div>
+                <div id="edit-upload-status" class="upload-status hidden" style="margin-bottom: 15px;">
+                    <div class="status-icon">
+                        <i class="fas fa-circle-notch fa-spin status-loading"></i>
+                        <i class="fas fa-check-circle status-success hidden"></i>
+                        <i class="fas fa-times-circle status-error hidden"></i>
+                    </div>
+                    <div class="status-message">Processing...</div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn outline-btn cancel-btn">Cancel</button>
-                    <button type="submit" class="btn primary-btn">Save Changes</button>
+                    <button type="submit" class="btn primary-btn" id="edit-save-btn">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -334,21 +357,68 @@ function openEditModal(note, noteId, semester) {
             return;
         }
         
-        // Update in Firebase
+        // Show saving status
+        const saveBtn = document.getElementById('edit-save-btn');
+        const originalBtnText = saveBtn.textContent;
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+        
+        // Show status indicator
+        const uploadStatus = document.getElementById('edit-upload-status');
+        const statusMessage = uploadStatus.querySelector('.status-message');
+        const loadingIcon = uploadStatus.querySelector('.status-loading');
+        const successIcon = uploadStatus.querySelector('.status-success');
+        const errorIcon = uploadStatus.querySelector('.status-error');
+        
+        // Set initial status
+        uploadStatus.classList.remove('hidden');
+        loadingIcon.classList.remove('hidden');
+        successIcon.classList.add('hidden');
+        errorIcon.classList.add('hidden');
+        statusMessage.textContent = 'Updating note in Firebase...';
+        
+        // Log for debugging
+        console.log(`Updating note: ${noteId} in semester: ${semester}`);
+        console.log('New data:', { title: newTitle, link: newLink });
+        
+        // Update in Firebase with additional fields to ensure proper update
         database.ref(`notes/${semester}/${noteId}`).update({
             title: newTitle,
-            link: newLink
+            link: newLink,
+            lastUpdated: firebase.database.ServerValue.TIMESTAMP
         })
         .then(() => {
-            // Remove modal
-            document.body.removeChild(modal);
+            console.log('Note successfully updated in Firebase');
             
-            // Reload notes
-            loadAdminNotes(semester);
+            // Update status
+            loadingIcon.classList.add('hidden');
+            successIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Note updated successfully!';
+            
+            // Reset button
+            saveBtn.textContent = originalBtnText;
+            saveBtn.disabled = false;
+            
+            // Remove modal after delay
+            setTimeout(() => {
+                document.body.removeChild(modal);
+                // Reload notes
+                loadAdminNotes(semester);
+            }, 1500);
         })
         .catch(error => {
             console.error('Error updating note:', error);
-            alert('Error updating note. Please try again.');
+            
+            // Update status
+            loadingIcon.classList.add('hidden');
+            errorIcon.classList.remove('hidden');
+            statusMessage.textContent = `Error: ${error.message}`;
+            
+            // Reset button
+            saveBtn.textContent = originalBtnText;
+            saveBtn.disabled = false;
+            
+            alert('Error updating note: ' + error.message);
         });
     });
 }
@@ -360,15 +430,75 @@ function openEditModal(note, noteId, semester) {
  */
 function confirmDeleteNote(noteId, semester) {
     if (confirm('Are you sure you want to delete this note?')) {
+        // Create and show a toast notification for deletion status
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                </div>
+                <div class="toast-message">Deleting note...</div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        // Log for debugging
+        console.log(`Deleting note: ${noteId} from semester: ${semester}`);
+        
         // Delete from Firebase
         database.ref(`notes/${semester}/${noteId}`).remove()
             .then(() => {
+                console.log('Note successfully deleted from Firebase');
+                
+                // Update toast for success
+                toast.innerHTML = `
+                    <div class="toast-content success">
+                        <div class="toast-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="toast-message">Note deleted successfully!</div>
+                    </div>
+                `;
+                
+                // Remove toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 2000);
+                
                 // Reload notes
                 loadAdminNotes(semester);
             })
             .catch(error => {
                 console.error('Error deleting note:', error);
-                alert('Error deleting note. Please try again.');
+                
+                // Update toast for error
+                toast.innerHTML = `
+                    <div class="toast-content error">
+                        <div class="toast-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="toast-message">Error: ${error.message}</div>
+                    </div>
+                `;
+                
+                // Remove toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+                
+                alert('Error deleting note: ' + error.message);
             });
     }
 }
