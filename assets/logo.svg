@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="45" fill="#4263eb" />
+  
+  <!-- Book Pages -->
+  <rect x="25" y="30" width="50" height="40" rx="2" ry="2" fill="#ffffff" />
+  
+  <!-- Book Binding -->
+  <rect x="48" y="30" width="4" height="40" fill="#f8f9fa" />
+  
+  <!-- Book Lines - Left Page -->
+  <line x1="30" y1="40" x2="45" y2="40" stroke="#748ffc" stroke-width="2" />
+  <line x1="30" y1="50" x2="45" y2="50" stroke="#748ffc" stroke-width="2" />
+  <line x1="30" y1="60" x2="45" y2="60" stroke="#748ffc" stroke-width="2" />
+  
+  <!-- Book Lines - Right Page -->
+  <line x1="55" y1="40" x2="70" y2="40" stroke="#748ffc" stroke-width="2" />
+  <line x1="55" y1="50" x2="70" y2="50" stroke="#748ffc" stroke-width="2" />
+  <line x1="55" y1="60" x2="70" y2="60" stroke="#748ffc" stroke-width="2" />
+  
+  <!-- KK Letters -->
+  <text x="50" y="55" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#333333">KK</text>
+</svg>

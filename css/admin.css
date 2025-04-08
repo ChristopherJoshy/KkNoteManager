@@ -1,0 +1,311 @@
+/* Admin specific styles */
+
+/* Admin Login Section */
+.admin-section {
+    max-width: 800px;
+    margin: var(--spacing-xxl) auto;
+    padding: var(--spacing-xl);
+}
+
+.admin-card {
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-xl);
+    text-align: center;
+}
+
+.admin-form {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-group input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    transition: border-color var(--transition-fast);
+}
+
+.form-group input:focus {
+    border-color: var(--primary-color);
+}
+
+.password-toggle {
+    position: absolute;
+    right: var(--spacing-md);
+    top: 2.3rem;
+    cursor: pointer;
+    color: var(--text-lighter);
+}
+
+.form-message {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    min-height: 1.5rem;
+}
+
+.error-message {
+    color: var(--danger-color);
+}
+
+.success-message {
+    color: var(--success-color);
+}
+
+/* Dashboard Styles */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-content {
+    display: flex;
+    gap: var(--spacing-xl);
+    background-color: var(--bg-light);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
+.dashboard-sidebar {
+    flex: 0 0 220px;
+    background-color: white;
+    padding: var(--spacing-lg);
+    border-right: 1px solid var(--border-color);
+}
+
+.dashboard-sidebar h3 {
+    color: var(--text-color);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.semester-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.semester-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.semester-item:hover {
+    background-color: var(--bg-light);
+}
+
+.semester-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dashboard-main {
+    flex: 1;
+    padding: var(--spacing-lg);
+}
+
+.edit-section h3 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--primary-color);
+}
+
+/* Admin Notes List */
+.admin-note-item {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.note-info {
+    flex: 1;
+}
+
+.note-title {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+}
+
+.note-link {
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+    word-break: break-all;
+}
+
+.note-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+    background-color: var(--bg-light);
+    border: none;
+}
+
+.edit-btn {
+    color: var(--primary-color);
+}
+
+.edit-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.delete-btn {
+    color: var(--danger-color);
+}
+
+.delete-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+/* Add Note Form */
+.add-note-section {
+    margin-top: var(--spacing-xl);
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.add-note-section h4 {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-color);
+}
+
+.add-note-form {
+    max-width: 100%;
+}
+
+/* Edit Modal */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-header h3 {
+    margin-bottom: 0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-lighter);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.close-modal:hover {
+    color: var(--danger-color);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+/* Responsive Admin Styles */
+@media (max-width: 768px) {
+    .dashboard-content {
+        flex-direction: column;
+    }
+    
+    .dashboard-sidebar {
+        flex: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .semester-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
+    
+    .semester-item {
+        flex: 0 0 calc(25% - var(--spacing-sm));
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        align-items: flex-start;
+    }
+    
+    .semester-item {
+        flex: 0 0 calc(50% - var(--spacing-sm));
+    }
+    
+    .admin-note-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .note-actions {
+        margin-top: var(--spacing-sm);
+        align-self: flex-end;
+    }
+}

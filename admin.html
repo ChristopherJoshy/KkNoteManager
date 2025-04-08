@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - KKNotes</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo-container">
+                <img src="assets/logo.svg" alt="KKNotes Logo" class="logo">
+                <h1>KKNotes</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="index.html#notes">Notes</a>
+                <a href="index.html#about">About</a>
+                <a href="admin.html" class="admin-link active"><i class="fas fa-lock"></i> Admin</a>
+            </div>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="admin-login" class="admin-section">
+            <div class="admin-card">
+                <h2>Admin Login <span class="emoji">🔐</span></h2>
+                <form id="login-form" class="admin-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                        <div class="password-toggle">
+                            <i class="fas fa-eye-slash"></i>
+                        </div>
+                    </div>
+                    <div class="form-message" id="login-message"></div>
+                    <button type="submit" class="btn primary-btn">Login <i class="fas fa-sign-in-alt"></i></button>
+                </form>
+            </div>
+        </section>
+
+        <section id="admin-dashboard" class="admin-section hidden">
+            <div class="dashboard-header">
+                <h2>Admin Dashboard <span class="emoji">⚙️</span></h2>
+                <button id="logout-btn" class="btn outline-btn">Logout <i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            
+            <div class="dashboard-content">
+                <div class="dashboard-sidebar">
+                    <h3>Semesters</h3>
+                    <ul class="semester-list">
+                        <li class="semester-item active" data-sem="s1">Semester 1</li>
+                        <li class="semester-item" data-sem="s2">Semester 2</li>
+                        <li class="semester-item" data-sem="s3">Semester 3</li>
+                        <li class="semester-item" data-sem="s4">Semester 4</li>
+                        <li class="semester-item" data-sem="s5">Semester 5</li>
+                        <li class="semester-item" data-sem="s6">Semester 6</li>
+                        <li class="semester-item" data-sem="s7">Semester 7</li>
+                        <li class="semester-item" data-sem="s8">Semester 8</li>
+                    </ul>
+                </div>
+                
+                <div class="dashboard-main">
+                    <div class="edit-section">
+                        <h3 id="current-sem-title">Semester 1 Notes</h3>
+                        <div class="notes-list" id="admin-notes-list">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading notes...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="add-note-section">
+                            <h4>Add New Note</h4>
+                            <form id="add-note-form" class="add-note-form">
+                                <div class="form-group">
+                                    <label for="note-title">Title</label>
+                                    <input type="text" id="note-title" name="note-title" required placeholder="e.g., Data Structures">
+                                </div>
+                                <div class="form-group">
+                                    <label for="note-link">Google Drive Link</label>
+                                    <input type="url" id="note-link" name="note-link" required placeholder="https://drive.google.com/...">
+                                </div>
+                                <button type="submit" class="btn primary-btn">Add Note <i class="fas fa-plus"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="assets/logo.svg" alt="KKNotes Logo" class="logo">
+                <h3>KKNotes</h3>
+            </div>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="index.html#notes">Notes</a>
+                <a href="index.html#about">About</a>
+            </div>
+            <div class="footer-social">
+                <a href="https://github.com/ChristopherJoshy" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://www.instagram.com/calculatederror/" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 KKNotes. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
