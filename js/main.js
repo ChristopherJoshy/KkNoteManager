@@ -6,8 +6,9 @@ const notesContainer = document.getElementById('notes-container');
 const menuToggle = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('.nav-links');
 
-// Current active semester
+// Current active semester and subject
 let currentSemester = 's1'; // Default to S1
+let currentSubject = null; // No subject selected by default
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', initialize);
@@ -31,8 +32,14 @@ function initialize() {
 /**
  * Load notes for a specific semester
  * @param {string} semester - The semester code (s1, s2, etc.)
+ * @param {string} subject - Optional subject key to filter notes by
  */
-function loadNotes(semester) {
+function loadNotes(semester, subject = null) {
+    // Reset current subject if loading a different semester
+    if (currentSubject !== subject) {
+        currentSubject = subject;
+    }
+    
     // Show loading spinner
     notesContainer.innerHTML = `
         <div class="loading-spinner">
@@ -46,52 +53,172 @@ function loadNotes(semester) {
         console.warn('Firebase request taking longer than expected, might be connection issues');
     }, 5000);
     
-    // Get notes from Firebase
-    database.ref(`notes/${semester}`).once('value')
-        .then(snapshot => {
-            clearTimeout(timeoutId);
-            const notes = snapshot.val();
-            if (notes) {
-                console.log(`Successfully loaded notes for ${semester}`);
-            } else {
-                console.log(`No notes found for ${semester}`);
-            }
-            displayNotes(notes);
-        })
-        .catch(error => {
-            clearTimeout(timeoutId);
-            console.error('Error loading notes:', error);
-            displayError();
-            
-            // Try to recover
-            setTimeout(() => {
-                console.log('Attempting to recover from Firebase error...');
-                try {
-                    database.goOffline();
-                    setTimeout(() => {
-                        database.goOnline();
-                        console.log('Firebase reconnected');
-                    }, 1000);
-                } catch (reconnectError) {
-                    console.error('Could not reconnect to Firebase:', reconnectError);
+    // Check if we should load subjects or notes
+    if (!subject) {
+        // Load subjects for this semester
+        database.ref(`subjects/${semester}`).once('value')
+            .then(snapshot => {
+                clearTimeout(timeoutId);
+                const subjects = snapshot.val();
+                if (subjects) {
+                    console.log(`Successfully loaded subjects for ${semester}`);
+                    displaySubjects(subjects, semester);
+                } else {
+                    console.log(`No subjects found for ${semester}`);
+                    displayEmptyState('No subjects found for this semester.');
                 }
-            }, 2000);
-        });
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                console.error('Error loading subjects:', error);
+                displayError();
+                
+                // Try to recover
+                recoverFirebaseConnection();
+            });
+    } else {
+        // Load notes for specific subject
+        database.ref(`notes/${semester}/${subject}`).once('value')
+            .then(snapshot => {
+                clearTimeout(timeoutId);
+                const notes = snapshot.val();
+                if (notes) {
+                    console.log(`Successfully loaded notes for ${semester}/${subject}`);
+                    displayNotes(notes, semester, subject);
+                } else {
+                    console.log(`No notes found for ${semester}/${subject}`);
+                    displayEmptyState(`No notes found for this subject.`);
+                }
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                console.error('Error loading notes:', error);
+                displayError();
+                
+                // Try to recover
+                recoverFirebaseConnection();
+            });
+    }
+}
+
+/**
+ * Try to recover from Firebase connection issues
+ */
+function recoverFirebaseConnection() {
+    setTimeout(() => {
+        console.log('Attempting to recover from Firebase error...');
+        try {
+            database.goOffline();
+            setTimeout(() => {
+                database.goOnline();
+                console.log('Firebase reconnected');
+            }, 1000);
+        } catch (reconnectError) {
+            console.error('Could not reconnect to Firebase:', reconnectError);
+        }
+    }, 2000);
+}
+
+/**
+ * Display subjects for a semester
+ * @param {Array} subjects - The subjects array from Firebase
+ * @param {string} semester - The current semester code
+ */
+function displaySubjects(subjects, semester) {
+    // Create container for subjects
+    const subjectsContainer = document.createElement('div');
+    subjectsContainer.className = 'subjects-container';
+    
+    // Add semester title
+    const semTitle = document.createElement('h3');
+    semTitle.className = 'semester-title';
+    semTitle.textContent = `Semester ${semester.substring(1)} Subjects`;
+    subjectsContainer.appendChild(semTitle);
+    
+    // Create subject list
+    const subjectsList = document.createElement('div');
+    subjectsList.className = 'subjects-list';
+    
+    // Create back button for mobile (only shown when viewing notes)
+    const backButton = document.createElement('button');
+    backButton.className = 'back-button hidden';
+    backButton.innerHTML = '<i class="fas fa-arrow-left"></i> Back to Subjects';
+    backButton.addEventListener('click', () => {
+        currentSubject = null;
+        loadNotes(currentSemester);
+    });
+    subjectsContainer.appendChild(backButton);
+    
+    // Add each subject as a button
+    subjects.forEach(subject => {
+        const subjectBtn = document.createElement('button');
+        subjectBtn.className = 'subject-btn';
+        subjectBtn.dataset.subject = subjectToKey(subject.name);
+        subjectBtn.dataset.id = subject.id;
+        subjectBtn.textContent = subject.name;
+        
+        // Add click event to load notes for this subject
+        subjectBtn.addEventListener('click', handleSubjectClick);
+        
+        subjectsList.appendChild(subjectBtn);
+    });
+    
+    subjectsContainer.appendChild(subjectsList);
+    
+    // Clear container and add subjects
+    notesContainer.innerHTML = '';
+    notesContainer.appendChild(subjectsContainer);
+}
+
+/**
+ * Handle subject button click
+ * @param {Event} event - The click event
+ */
+function handleSubjectClick(event) {
+    const subject = event.target.dataset.subject;
+    const subjectName = event.target.textContent;
+    
+    // Update active subject button
+    const subjectBtns = document.querySelectorAll('.subject-btn');
+    subjectBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Show back button on mobile
+    const backButton = document.querySelector('.back-button');
+    if (backButton) backButton.classList.remove('hidden');
+    
+    // Load notes for this subject
+    loadNotes(currentSemester, subject);
 }
 
 /**
  * Display notes in the container
  * @param {Object} notes - The notes object from Firebase
+ * @param {string} semester - The current semester code
+ * @param {string} subject - The current subject key
  */
-function displayNotes(notes) {
+function displayNotes(notes, semester, subject) {
     if (!notes || Object.keys(notes).length === 0) {
-        displayEmptyState();
+        displayEmptyState(`No notes found for this subject.`);
         return;
     }
+    
+    // Get the subject container and show back button
+    const subjectsContainer = document.querySelector('.subjects-container');
+    const backButton = document.querySelector('.back-button');
+    if (backButton) backButton.classList.remove('hidden');
     
     // Create notes list container
     const notesList = document.createElement('div');
     notesList.className = 'notes-list';
+    
+    // Add subject title
+    const subjectTitle = document.createElement('h3');
+    subjectTitle.className = 'subject-title';
+    keyToSubject(subject, semester).then(readableSubject => {
+        subjectTitle.textContent = readableSubject;
+    });
+    notesList.appendChild(subjectTitle);
     
     // Add each note as a card
     Object.keys(notes).forEach(key => {
@@ -100,8 +227,13 @@ function displayNotes(notes) {
         notesList.appendChild(noteCard);
     });
     
-    // Clear container and add notes list
-    notesContainer.innerHTML = '';
+    // Clear notes area (keeping subject list)
+    const existingNotesList = document.querySelector('.notes-list');
+    if (existingNotesList) {
+        existingNotesList.remove();
+    }
+    
+    // Add the notes list
     notesContainer.appendChild(notesList);
 }
 
@@ -125,16 +257,32 @@ function createNoteCard(note) {
 }
 
 /**
- * Display empty state when no notes are found
+ * Display empty state with custom message
+ * @param {string} message - Custom message to display
  */
-function displayEmptyState() {
-    notesContainer.innerHTML = `
-        <div class="empty-state">
-            <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-            <h3>No notes found</h3>
-            <p>There are no notes available for this semester yet.</p>
-        </div>
-    `;
+function displayEmptyState(message = 'There are no notes available for this semester yet.') {
+    // If we're viewing a subject, only update the notes area
+    const existingSubjectsContainer = document.querySelector('.subjects-container');
+    const existingNotesList = document.querySelector('.notes-list');
+    
+    if (currentSubject && existingSubjectsContainer && existingNotesList) {
+        existingNotesList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h3>No notes found</h3>
+                <p>${message}</p>
+            </div>
+        `;
+    } else {
+        // Otherwise, update the entire container
+        notesContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h3>No notes found</h3>
+                <p>${message}</p>
+            </div>
+        `;
+    }
 }
 
 /**
