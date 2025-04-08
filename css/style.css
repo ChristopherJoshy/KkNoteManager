@@ -1,6 +1,6 @@
 /* ===== Base Styles ===== */
 :root {
-    /* Color Palette */
+    /* Color Palette - Light Mode (Default) */
     --primary-color: #4263eb;
     --primary-dark: #364fc7;
     --primary-light: #748ffc;
@@ -16,6 +16,32 @@
     --warning-color: #f59f00;
     --danger-color: #f03e3e;
     --border-color: #dee2e6;
+    --chat-bg: #f0f2f5;
+    --card-bg: #fff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode Colors */
+[data-theme="dark"] {
+    --primary-color: #748ffc;
+    --primary-dark: #4263eb;
+    --primary-light: #364fc7;
+    --secondary-color: #3bc9db;
+    --secondary-color-dark: #22b8cf;
+    --text-color: #e9ecef;
+    --text-light: #ced4da;
+    --text-lighter: #adb5bd;
+    --bg-color: #121212;
+    --bg-light: #1e1e1e;
+    --bg-dark: #2d2d2d;
+    --success-color: #40c057;
+    --warning-color: #fab005;
+    --danger-color: #fa5252;
+    --border-color: #4d4d4d;
+    --chat-bg: #1e1e1e;
+    --card-bg: #2d2d2d;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
     
     /* Spacing */
     --spacing-xs: 0.25rem;
@@ -195,6 +221,48 @@ nav {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-light);
+    transform: rotate(15deg);
+}
+
+.theme-toggle i {
+    transition: transform var(--transition-normal);
+}
+
+.theme-toggle.rotate i {
+    animation: rotate-icon 0.5s ease;
+}
+
+@keyframes rotate-icon {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .menu-toggle {
@@ -881,6 +949,50 @@ footer {
     border: 1px solid var(--border-color);
 }
 
+.chat-form button {
+    transition: all 0.3s ease;
+}
+
+.chat-form button.submitting {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+}
+
+.chat-form button.success {
+    background-color: var(--success-color, #28a745);
+    color: white;
+}
+
+.chat-form button.error {
+    background-color: var(--warning-color, #dc3545);
+    color: white;
+}
+
+.chat-error-toast {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--warning-color, #dc3545);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.chat-error-toast i {
+    font-size: var(--font-size-md);
+}
+
+.fade-out {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
 .chat-user-info {
     display: flex;
     align-items: center;
@@ -923,6 +1035,7 @@ footer {
     color: var(--text-lighter);
 }
 
+/* Animation Keyframes */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -932,4 +1045,90 @@ footer {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease forwards;
+}
+
+.slide-out {
+    animation: slideOut 0.3s ease forwards;
+}
+
+.pop-in {
+    animation: popIn 0.4s ease forwards;
+}
+
+.pulse-animation {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.shake-animation {
+    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
 }

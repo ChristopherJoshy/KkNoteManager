@@ -161,6 +161,22 @@ function createMessageElement(message) {
     messageDiv.className = 'chat-message';
     messageDiv.dataset.id = message.id;
     
+    // Add animation class
+    const currentUser = firebase.auth().currentUser;
+    // Only animate if we have a number timestamp (not server value)
+    const isNewMessage = typeof message.timestamp === 'number' && 
+                         message.timestamp > (Date.now() - 2000); // Message posted within the last 2 seconds
+    
+    if (isNewMessage) {
+        // Use pop-in animation for brand new messages
+        messageDiv.classList.add('pop-in');
+        
+        // Remove animation class after animation completes
+        setTimeout(() => {
+            messageDiv.classList.remove('pop-in');
+        }, 500);
+    }
+    
     // Create user info with role highlighting
     const userDiv = document.createElement('div');
     userDiv.className = 'chat-message-user';
@@ -263,12 +279,35 @@ function handleChatLogin() {
 function showChatForm(user) {
     if (!chatForm || !chatLoginBtn || !chatUserInfo) return;
     
-    // Show the chat form
-    chatForm.classList.remove('hidden');
-    chatLoginBtn.classList.add('hidden');
+    // Create chat login div to animate out
+    const chatLoginDiv = document.querySelector('.chat-login');
+    if (chatLoginDiv) {
+        // First, add animation class to slide out
+        chatLoginDiv.classList.add('slide-out');
+        
+        // After animation completes, hide the login button
+        setTimeout(() => {
+            chatLoginBtn.classList.add('hidden');
+            chatLoginDiv.classList.remove('slide-out');
+            
+            // Show the chat form with animation
+            chatForm.classList.remove('hidden');
+            chatForm.classList.add('slide-in');
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                chatForm.classList.remove('slide-in');
+            }, 500);
+        }, 300);
+    } else {
+        // Fallback if animation can't be used
+        chatForm.classList.remove('hidden');
+        chatLoginBtn.classList.add('hidden');
+    }
     
-    // Update user info
+    // Update user info with fade in animation
     chatUserInfo.innerHTML = '';
+    chatUserInfo.classList.add('fade-in');
     
     // Add user avatar
     const avatar = document.createElement('img');
@@ -282,6 +321,11 @@ function showChatForm(user) {
     userName.className = 'chat-username';
     userName.textContent = user.displayName;
     chatUserInfo.appendChild(userName);
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+        chatUserInfo.classList.remove('fade-in');
+    }, 500);
 }
 
 /**
@@ -300,7 +344,11 @@ function handleChatSubmit(event) {
     // Disable submit button to prevent multiple submissions
     const submitBtn = chatForm.querySelector('button[type="submit"]');
     if (submitBtn) {
+        // Show loading animation
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         submitBtn.disabled = true;
+        submitBtn.classList.add('submitting');
     }
     
     // Create the message object
@@ -321,9 +369,18 @@ function handleChatSubmit(event) {
             // Clear input field
             chatInput.value = '';
             
-            // Re-enable submit button
+            // Restore and re-enable submit button with success animation
             if (submitBtn) {
-                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i>';
+                submitBtn.classList.remove('submitting');
+                submitBtn.classList.add('success');
+                
+                // Reset button after success animation
+                setTimeout(() => {
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('success');
+                }, 1000);
             }
             
             // Focus on input for next message
@@ -332,13 +389,36 @@ function handleChatSubmit(event) {
         .catch(error => {
             console.error('Error sending chat message:', error);
             
-            // Re-enable submit button
+            // Show error state on button
             if (submitBtn) {
-                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-times"></i>';
+                submitBtn.classList.remove('submitting');
+                submitBtn.classList.add('error');
+                
+                // Reset button after error animation
+                setTimeout(() => {
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('error');
+                }, 1000);
             }
             
-            // Alert the user
-            alert('Failed to send message: ' + error.message);
+            // Show error message as toast instead of alert
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                const errorToast = document.createElement('div');
+                errorToast.className = 'chat-error-toast fade-in';
+                errorToast.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
+                chatContainer.appendChild(errorToast);
+                
+                // Remove toast after 3 seconds
+                setTimeout(() => {
+                    errorToast.classList.add('fade-out');
+                    setTimeout(() => {
+                        errorToast.remove();
+                    }, 300);
+                }, 3000);
+            }
         });
 }
 

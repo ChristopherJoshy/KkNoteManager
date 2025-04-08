@@ -84,7 +84,17 @@ function handleGoogleLogin() {
         prompt: 'select_account'
     });
     
-    // Show loading state
+    // Show loading state with animation on the button
+    if (googleLoginBtn) {
+        const originalContent = googleLoginBtn.innerHTML;
+        googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        googleLoginBtn.disabled = true;
+        
+        // Add subtle pulse animation to the button
+        googleLoginBtn.classList.add('pulse-animation');
+    }
+    
+    // Show loading state message
     if (loginMessage) {
         showMessage('Connecting to Google...', 'info');
     }
@@ -99,11 +109,31 @@ function handleGoogleLogin() {
         currentUser = user;
         console.log('Google Sign-In successful:', user.email);
         
+        // Restore button (if user comes back to this page later)
+        if (googleLoginBtn) {
+            googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+            googleLoginBtn.disabled = false;
+            googleLoginBtn.classList.remove('pulse-animation');
+        }
+        
         // Check if user has admin privileges
         checkAdminStatus(user);
     }).catch(error => {
         console.error('Google Sign-In error:', error);
         showMessage('Google Sign-In failed: ' + error.message, 'error');
+        
+        // Restore button on error
+        if (googleLoginBtn) {
+            googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+            googleLoginBtn.disabled = false;
+            googleLoginBtn.classList.remove('pulse-animation');
+            
+            // Add error shake animation
+            googleLoginBtn.classList.add('shake-animation');
+            setTimeout(() => {
+                googleLoginBtn.classList.remove('shake-animation');
+            }, 820); // 820ms is the duration of our shake animation
+        }
     });
 }
 
@@ -131,8 +161,23 @@ function handleLogout() {
  */
 function showLoginUI() {
     if (adminLogin && adminDashboard) {
-        adminLogin.classList.remove('hidden');
-        adminDashboard.classList.add('hidden');
+        // Add slide-out animation to dashboard before hiding
+        adminDashboard.classList.add('slide-out');
+        
+        // After animation completes, swap visibility
+        setTimeout(() => {
+            adminDashboard.classList.add('hidden');
+            adminDashboard.classList.remove('slide-out');
+            
+            // Show login with animation
+            adminLogin.classList.remove('hidden');
+            adminLogin.classList.add('slide-in');
+            
+            // Remove animation class after it completes
+            setTimeout(() => {
+                adminLogin.classList.remove('slide-in');
+            }, 500);
+        }, 300);
     }
 }
 
@@ -141,13 +186,28 @@ function showLoginUI() {
  */
 function showAdminUI() {
     if (adminLogin && adminDashboard) {
-        adminLogin.classList.add('hidden');
-        adminDashboard.classList.remove('hidden');
+        // Add slide-out animation to login before hiding
+        adminLogin.classList.add('slide-out');
         
-        // If we're in the admin.html page, update admin interface based on permissions
-        if (window.location.pathname.includes('admin.html')) {
-            updateAdminInterface();
-        }
+        // After animation completes, swap visibility
+        setTimeout(() => {
+            adminLogin.classList.add('hidden');
+            adminLogin.classList.remove('slide-out');
+            
+            // Show dashboard with animation
+            adminDashboard.classList.remove('hidden');
+            adminDashboard.classList.add('slide-in');
+            
+            // If we're in the admin.html page, update admin interface based on permissions
+            if (window.location.pathname.includes('admin.html')) {
+                updateAdminInterface();
+            }
+            
+            // Remove animation class after it completes
+            setTimeout(() => {
+                adminDashboard.classList.remove('slide-in');
+            }, 500);
+        }, 300);
     }
 }
 
@@ -191,14 +251,29 @@ function updateAdminInterface() {
 function showMessage(message, type) {
     if (!loginMessage) return;
     
-    loginMessage.textContent = message;
-    loginMessage.className = 'form-message';
+    // Set up animation by removing previous message with fade-out
+    loginMessage.classList.add('fade-out');
     
-    if (type === 'error') {
-        loginMessage.classList.add('error-message');
-    } else if (type === 'success') {
-        loginMessage.classList.add('success-message');
-    } else if (type === 'info') {
-        loginMessage.classList.add('info-message');
-    }
+    // After fade-out is complete, change content and fade back in
+    setTimeout(() => {
+        loginMessage.textContent = message;
+        loginMessage.className = 'form-message';
+        
+        if (type === 'error') {
+            loginMessage.classList.add('error-message');
+        } else if (type === 'success') {
+            loginMessage.classList.add('success-message');
+        } else if (type === 'info') {
+            loginMessage.classList.add('info-message');
+        }
+        
+        // Trigger animation by removing the fade-out class and adding fade-in
+        loginMessage.classList.remove('fade-out');
+        loginMessage.classList.add('fade-in');
+        
+        // Remove animation class after it completes
+        setTimeout(() => {
+            loginMessage.classList.remove('fade-in');
+        }, 500);
+    }, 300);
 }
