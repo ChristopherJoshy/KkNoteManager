@@ -11,13 +11,36 @@ const firebaseConfig = {
 
 // Initialize Firebase
 if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+    try {
+        console.log('Initializing Firebase with config:', JSON.stringify(firebaseConfig));
+        firebase.initializeApp(firebaseConfig);
+        console.log('Firebase initialized successfully');
+    } catch (error) {
+        console.error('Error initializing Firebase:', error);
+        alert('Error connecting to Firebase: ' + error.message);
+    }
 } else {
     firebase.app(); // if already initialized
+    console.log('Using existing Firebase app');
 }
 
 // Get a reference to the database service
 const database = firebase.database();
+
+// Test database connection
+console.log('Testing Firebase database connection...');
+database.ref('.info/connected').once('value')
+    .then(snap => {
+        console.log('Firebase connection test result:', snap.val());
+        if (snap.val() === true) {
+            console.log('✅ Successfully connected to Firebase!');
+        } else {
+            console.log('❌ Not connected to Firebase database');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Firebase connection test failed:', error);
+    });
 
 // Configure connection monitoring
 firebase.database().ref('.info/connected').on('value', (snap) => {

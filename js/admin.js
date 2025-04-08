@@ -372,3 +372,146 @@ function confirmDeleteNote(noteId, semester) {
             });
     }
 }
+
+/**
+ * Test Firebase connection and display the results
+ */
+function testFirebaseConnection() {
+    // Create a modal to show results
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Firebase Connection Test</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="firebase-test-results">
+                <div class="test-status">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <p>Testing connection to Firebase...</p>
+                </div>
+                <div class="test-details" style="display: none;">
+                    <h4>Connection Details:</h4>
+                    <pre id="firebase-details" style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow: auto; max-height: 200px;"></pre>
+                    <h4>Test Results:</h4>
+                    <ul id="firebase-test-results" style="margin-left: 20px;"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn outline-btn close-btn">Close</button>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to document
+    document.body.appendChild(modal);
+    
+    // Add event listeners
+    const closeBtn = modal.querySelector('.close-modal');
+    const closeBtnFooter = modal.querySelector('.close-btn');
+    
+    closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+    closeBtnFooter.addEventListener('click', () => document.body.removeChild(modal));
+    
+    // Test the connection
+    const testStatus = modal.querySelector('.test-status');
+    const testDetails = modal.querySelector('.test-details');
+    const firebaseDetails = modal.querySelector('#firebase-details');
+    const testResults = modal.querySelector('#firebase-test-results');
+    
+    // Display Firebase config
+    const sanitizedConfig = Object.assign({}, firebaseConfig);
+    sanitizedConfig.apiKey = sanitizedConfig.apiKey.substring(0, 8) + '...';
+    firebaseDetails.textContent = JSON.stringify(sanitizedConfig, null, 2);
+    
+    // Run tests
+    setTimeout(() => {
+        testStatus.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> <p>Testing complete!</p>';
+        testDetails.style.display = 'block';
+        
+        // Test 1: Firebase Initialization
+        try {
+            const firebaseInitTest = firebase.app() ? true : false;
+            addTestResult(testResults, 
+                firebaseInitTest, 
+                'Firebase app initialization', 
+                firebaseInitTest ? 'Firebase is properly initialized' : 'Firebase initialization failed'
+            );
+        } catch (e) {
+            addTestResult(testResults, false, 'Firebase app initialization', e.message);
+        }
+        
+        // Test 2: Database connection
+        database.ref('.info/connected').once('value')
+            .then(snap => {
+                const isConnected = snap.val() === true;
+                addTestResult(testResults, 
+                    isConnected, 
+                    'Realtime Database connection', 
+                    isConnected ? 'Successfully connected to Realtime Database' : 'Not connected to Realtime Database'
+                );
+            })
+            .catch(error => {
+                addTestResult(testResults, false, 'Realtime Database connection', error.message);
+            });
+        
+        // Test 3: Write permission
+        const testRef = database.ref('connection_test').push();
+        testRef.set({
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            test: 'Connection test'
+        })
+            .then(() => {
+                addTestResult(testResults, true, 'Database write permission', 'Successfully wrote test data to Firebase');
+                
+                // Clean up test data
+                testRef.remove().catch(e => console.error('Error cleaning up test data:', e));
+            })
+            .catch(error => {
+                addTestResult(testResults, false, 'Database write permission', error.message);
+            });
+            
+        // Test 4: Read notes structure
+        database.ref('notes').once('value')
+            .then(snapshot => {
+                const hasNotes = snapshot.exists();
+                let message = hasNotes ? 
+                    `Notes structure exists, found ${Object.keys(snapshot.val() || {}).length} semester(s)` : 
+                    'Notes structure does not exist yet';
+                
+                addTestResult(testResults, true, 'Database notes structure', message);
+            })
+            .catch(error => {
+                addTestResult(testResults, false, 'Database notes structure', error.message);
+            });
+    }, 1500);
+}
+
+/**
+ * Add a test result item to the results list
+ * @param {HTMLElement} container - The container to add the result to
+ * @param {boolean} success - Whether the test was successful
+ * @param {string} name - The name of the test
+ * @param {string} message - The result message
+ */
+function addTestResult(container, success, name, message) {
+    const item = document.createElement('li');
+    item.innerHTML = `
+        <span style="color: ${success ? 'var(--success-color)' : 'var(--danger-color)'}">
+            <i class="fas ${success ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+            <strong>${name}:</strong>
+        </span> 
+        ${message}
+    `;
+    container.appendChild(item);
+}
+
+// Add event listener for the test Firebase button
+document.addEventListener('DOMContentLoaded', function() {
+    const testFirebaseBtn = document.getElementById('test-firebase-btn');
+    if (testFirebaseBtn) {
+        testFirebaseBtn.addEventListener('click', testFirebaseConnection);
+    }
+});

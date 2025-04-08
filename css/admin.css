@@ -116,6 +116,11 @@
     margin-bottom: var(--spacing-xl);
 }
 
+.dashboard-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
 .dashboard-content {
     display: flex;
     gap: var(--spacing-xl);
