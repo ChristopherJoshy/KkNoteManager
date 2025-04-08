@@ -51,27 +51,22 @@ firebase.database().ref('.info/connected').on('value', (snap) => {
     }
 });
 
-// Function to initialize database with default structure if empty
+// Function to initialize database with empty structure if needed
 function initializeDatabase() {
     // Check if the notes collection exists
     database.ref('notes').once('value', snapshot => {
         if (!snapshot.exists()) {
-            // Create default structure for semesters S1-S8
-            const defaultSemesters = {};
+            // Create empty structure for semesters S1-S8
+            const emptySemesters = {};
             
+            // Create empty objects for each semester without sample notes
             for (let i = 1; i <= 8; i++) {
-                defaultSemesters[`s${i}`] = {
-                    // Sample note to show structure
-                    sample: {
-                        title: `Sample S${i} Note`,
-                        link: "https://drive.google.com/sample-link",
-                    }
-                };
+                emptySemesters[`s${i}`] = {};
             }
             
-            // Set default data
-            database.ref('notes').set(defaultSemesters)
-                .then(() => console.log('Database initialized with default structure'))
+            // Set empty data structure
+            database.ref('notes').set(emptySemesters)
+                .then(() => console.log('Database initialized with empty structure'))
                 .catch(error => console.error('Error initializing database:', error));
         }
     });
