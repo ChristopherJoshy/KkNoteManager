@@ -43,30 +43,41 @@
         <section id="admin-login" class="admin-section">
             <div class="admin-card">
                 <h2>Admin Login <span class="emoji">🔐</span></h2>
-                <form id="login-form" class="admin-form">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" required>
+                <div class="admin-form">
+                    <div class="login-message-container">
+                        <div class="form-message" id="login-message"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
-                        <div class="password-toggle">
-                            <i class="fas fa-eye-slash"></i>
-                        </div>
+                    
+                    <div class="login-options">
+                        <button id="google-login-btn" class="btn google-btn">
+                            <i class="fab fa-google"></i> Sign in with Google
+                        </button>
                     </div>
-                    <div class="form-message" id="login-message"></div>
-                    <button type="submit" class="btn primary-btn">Login <i class="fas fa-sign-in-alt"></i></button>
-                </form>
+                    
+                    <div class="login-info">
+                        <p>Only authorized administrators can access this section.</p>
+                        <p class="small">Authentication is managed via Firebase. Contact a super admin for access.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
         <section id="admin-dashboard" class="admin-section hidden">
             <div class="dashboard-header">
-                <h2>Admin Dashboard <span class="emoji">⚙️</span></h2>
-                <div class="dashboard-actions">
-                    <button id="test-firebase-btn" class="btn primary-btn">Test Firebase Connection</button>
-                    <button id="logout-btn" class="btn outline-btn">Logout <i class="fas fa-sign-out-alt"></i></button>
+                <div class="dashboard-title">
+                    <h2>Admin Dashboard <span class="emoji">⚙️</span></h2>
+                </div>
+                
+                <div class="dashboard-user-section">
+                    <div id="admin-user-info" class="user-info">
+                        <!-- User info will be inserted here by JavaScript -->
+                    </div>
+                    
+                    <div class="dashboard-actions">
+                        <button id="test-firebase-btn" class="btn primary-btn">Test Firebase Connection</button>
+                        <button id="manage-admins-btn" class="btn secondary-btn super-admin-only hidden">Manage Admins</button>
+                        <button id="logout-btn" class="btn outline-btn">Logout <i class="fas fa-sign-out-alt"></i></button>
+                    </div>
                 </div>
             </div>
             
@@ -120,6 +131,57 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Admin Management Modal -->
+            <div id="admin-management-modal" class="modal-backdrop hidden">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>Manage Administrators</h3>
+                        <button class="close-modal" id="close-admin-modal">&times;</button>
+                    </div>
+                    
+                    <div class="info-message">
+                        <p>Manage administrators who can edit content on this site.</p>
+                        <p><strong>Note:</strong> The super admin account (christopherjoshy4@gmail.com) cannot be removed.</p>
+                    </div>
+                    
+                    <div class="admin-list-container">
+                        <h4>Current Administrators</h4>
+                        <div id="admin-list" class="admin-list">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading administrators...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-admin-section">
+                        <h4>Add New Administrator</h4>
+                        <form id="add-admin-form" class="add-admin-form">
+                            <div class="form-group">
+                                <label for="admin-email">Email Address</label>
+                                <input type="email" id="admin-email" name="admin-email" required placeholder="user@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-role">Role</label>
+                                <select id="admin-role" name="admin-role">
+                                    <option value="admin">Admin</option>
+                                    <option value="superadmin">Super Admin</option>
+                                </select>
+                            </div>
+                            <div id="admin-update-status" class="upload-status hidden">
+                                <div class="status-icon">
+                                    <i class="fas fa-circle-notch fa-spin status-loading"></i>
+                                    <i class="fas fa-check-circle status-success hidden"></i>
+                                    <i class="fas fa-times-circle status-error hidden"></i>
+                                </div>
+                                <div class="status-message">Processing...</div>
+                            </div>
+                            <button type="submit" class="btn primary-btn">Add Administrator <i class="fas fa-plus"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -147,8 +209,10 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     
     <!-- Custom JS -->
+    <script src="js/env-config.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>

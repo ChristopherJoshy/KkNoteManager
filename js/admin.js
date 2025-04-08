@@ -5,6 +5,12 @@ const semesterItems = document.querySelectorAll('.semester-item');
 const currentSemTitle = document.getElementById('current-sem-title');
 const adminNotesList = document.getElementById('admin-notes-list');
 const addNoteForm = document.getElementById('add-note-form');
+const adminManagementModal = document.getElementById('admin-management-modal');
+const manageAdminsBtn = document.getElementById('manage-admins-btn');
+const closeAdminModalBtn = document.getElementById('close-admin-modal');
+const adminListContainer = document.getElementById('admin-list');
+const addAdminForm = document.getElementById('add-admin-form');
+const testFirebaseBtn = document.getElementById('test-firebase-btn');
 
 // Current selected semester in admin panel
 let currentAdminSemester = 's1'; // Default to S1
@@ -13,6 +19,10 @@ let currentAdminSemester = 's1'; // Default to S1
 document.addEventListener('DOMContentLoaded', initializeAdmin);
 semesterItems.forEach(item => item.addEventListener('click', handleAdminSemesterChange));
 if (addNoteForm) addNoteForm.addEventListener('submit', handleAddNote);
+if (manageAdminsBtn) manageAdminsBtn.addEventListener('click', openAdminManagementModal);
+if (closeAdminModalBtn) closeAdminModalBtn.addEventListener('click', closeAdminManagementModal);
+if (addAdminForm) addAdminForm.addEventListener('submit', handleAddAdmin);
+if (testFirebaseBtn) testFirebaseBtn.addEventListener('click', testFirebaseConnection);
 
 /**
  * Initialize the admin panel
@@ -638,10 +648,318 @@ function addTestResult(container, success, name, message) {
     container.appendChild(item);
 }
 
-// Add event listener for the test Firebase button
+// Add event listeners
 document.addEventListener('DOMContentLoaded', function() {
     const testFirebaseBtn = document.getElementById('test-firebase-btn');
+    const manageAdminsBtn = document.getElementById('manage-admins-btn');
+    const closeAdminModalBtn = document.getElementById('close-admin-modal');
+    const addAdminForm = document.getElementById('add-admin-form');
+    
     if (testFirebaseBtn) {
         testFirebaseBtn.addEventListener('click', testFirebaseConnection);
     }
+    
+    if (manageAdminsBtn) {
+        manageAdminsBtn.addEventListener('click', openAdminManagementModal);
+    }
+    
+    if (closeAdminModalBtn) {
+        closeAdminModalBtn.addEventListener('click', closeAdminManagementModal);
+    }
+    
+    if (addAdminForm) {
+        addAdminForm.addEventListener('submit', handleAddAdmin);
+    }
 });
+
+/**
+ * Open the admin management modal
+ */
+function openAdminManagementModal() {
+    const adminManagementModal = document.getElementById('admin-management-modal');
+    if (!adminManagementModal) return;
+    
+    // Show modal
+    adminManagementModal.classList.remove('hidden');
+    
+    // Load admin list
+    loadAdminList();
+}
+
+/**
+ * Close the admin management modal
+ */
+function closeAdminManagementModal() {
+    const adminManagementModal = document.getElementById('admin-management-modal');
+    if (!adminManagementModal) return;
+    
+    // Hide modal
+    adminManagementModal.classList.add('hidden');
+}
+
+/**
+ * Load the list of administrators from Firebase
+ */
+function loadAdminList() {
+    const adminListContainer = document.getElementById('admin-list');
+    if (!adminListContainer) return;
+    
+    // Show loading
+    adminListContainer.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading administrators...</p>
+        </div>
+    `;
+    
+    // Get admins from Firebase
+    database.ref('admins').once('value')
+        .then(snapshot => {
+            const admins = snapshot.val();
+            
+            if (!admins || Object.keys(admins).length === 0) {
+                displayAdminEmptyList();
+                return;
+            }
+            
+            // Clear container
+            adminListContainer.innerHTML = '';
+            
+            // Get permanent admin email from config
+            database.ref('config/permanentAdmin').once('value')
+                .then(permSnapshot => {
+                    const permanentAdmin = permSnapshot.val();
+                    
+                    // Add each admin as an item
+                    Object.keys(admins).forEach(key => {
+                        const admin = admins[key];
+                        const adminItem = createAdminItem(admin, key, permanentAdmin);
+                        adminListContainer.appendChild(adminItem);
+                    });
+                });
+        })
+        .catch(error => {
+            console.error('Error loading admins:', error);
+            displayAdminEmptyList();
+        });
+}
+
+/**
+ * Display empty state for admin list
+ */
+function displayAdminEmptyList() {
+    const adminListContainer = document.getElementById('admin-list');
+    if (!adminListContainer) return;
+    
+    adminListContainer.innerHTML = `
+        <div class="admin-empty-state">
+            <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <h4>No administrators found</h4>
+            <p>Add administrators using the form below.</p>
+        </div>
+    `;
+}
+
+/**
+ * Create an admin item element
+ * @param {Object} admin - The admin object
+ * @param {string} adminId - The admin ID in Firebase
+ * @param {string} permanentAdmin - The email of the permanent admin
+ * @returns {HTMLElement} - The admin item element
+ */
+function createAdminItem(admin, adminId, permanentAdmin) {
+    const item = document.createElement('div');
+    item.className = 'admin-item';
+    item.dataset.id = adminId;
+    
+    const isPermanent = admin.email === permanentAdmin || admin.isPermanent;
+    const isSuperAdmin = admin.role === 'superadmin' || admin.email === permanentAdmin;
+    
+    item.innerHTML = `
+        <div class="admin-info">
+            <p class="admin-email">${admin.email}</p>
+            <span class="admin-role ${isSuperAdmin ? 'superadmin' : ''} ${isPermanent ? 'permanent' : ''}">
+                ${isPermanent ? 'Permanent ' : ''}${isSuperAdmin ? 'Super Admin' : 'Admin'}
+            </span>
+        </div>
+        ${!isPermanent ? `
+        <div class="admin-actions">
+            <button class="action-btn delete-btn" title="Remove Admin">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>` : ''}
+    `;
+    
+    // Add event listener for delete button if not permanent
+    if (!isPermanent) {
+        const deleteBtn = item.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', () => confirmDeleteAdmin(adminId, admin.email));
+    }
+    
+    return item;
+}
+
+/**
+ * Handle adding a new administrator
+ * @param {Event} event - The form submission event
+ */
+function handleAddAdmin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('admin-email').value.trim();
+    const role = document.getElementById('admin-role').value;
+    
+    // Simple validation
+    if (!email) {
+        alert('Please enter an email address');
+        return;
+    }
+    
+    // Check if email is valid
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Please enter a valid email address');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#add-admin-form button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Adding...';
+    submitBtn.disabled = true;
+    
+    // Show status
+    const uploadStatus = document.getElementById('admin-update-status');
+    const statusMessage = uploadStatus.querySelector('.status-message');
+    const loadingIcon = uploadStatus.querySelector('.status-loading');
+    const successIcon = uploadStatus.querySelector('.status-success');
+    const errorIcon = uploadStatus.querySelector('.status-error');
+    
+    // Set initial status
+    uploadStatus.classList.remove('hidden');
+    loadingIcon.classList.remove('hidden');
+    successIcon.classList.add('hidden');
+    errorIcon.classList.add('hidden');
+    statusMessage.textContent = 'Adding administrator...';
+    
+    // Create admin username from email (remove special chars)
+    const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Check if admin already exists
+    database.ref('admins').orderByChild('email').equalTo(email).once('value')
+        .then(snapshot => {
+            if (snapshot.exists()) {
+                throw new Error('An administrator with this email already exists');
+            }
+            
+            // Add to Firebase
+            return database.ref(`admins/${username}`).set({
+                email: email,
+                role: role,
+                isPermanent: false,
+                dateAdded: firebase.database.ServerValue.TIMESTAMP
+            });
+        })
+        .then(() => {
+            // Reset form
+            document.getElementById('add-admin-form').reset();
+            
+            // Update status
+            loadingIcon.classList.add('hidden');
+            successIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Administrator added successfully!';
+            
+            // Reset button
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Hide status after delay
+            setTimeout(() => {
+                uploadStatus.classList.add('hidden');
+            }, 3000);
+            
+            // Reload admin list
+            loadAdminList();
+        })
+        .catch(error => {
+            console.error('Error adding admin:', error);
+            
+            // Update status
+            loadingIcon.classList.add('hidden');
+            errorIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Error: ' + error.message;
+            
+            // Reset button
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Hide status after delay
+            setTimeout(() => {
+                uploadStatus.classList.add('hidden');
+            }, 5000);
+        });
+}
+
+/**
+ * Confirm and delete an administrator
+ * @param {string} adminId - The admin ID in Firebase
+ * @param {string} email - The admin's email
+ */
+function confirmDeleteAdmin(adminId, email) {
+    if (confirm(`Are you sure you want to remove ${email} as an administrator?`)) {
+        // Create and show a toast notification for deletion status
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                </div>
+                <div class="toast-message">Removing administrator...</div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        // Delete from Firebase
+        database.ref(`admins/${adminId}`).remove()
+            .then(() => {
+                // Update toast to show success
+                toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-check-circle"></i>';
+                toast.querySelector('.toast-message').textContent = 'Administrator removed successfully';
+                toast.querySelector('.toast-content').classList.add('success');
+                
+                // Hide toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    // Remove toast from DOM after hide animation
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+                
+                // Reload admin list
+                loadAdminList();
+            })
+            .catch(error => {
+                console.error('Error removing admin:', error);
+                
+                // Update toast to show error
+                toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-times-circle"></i>';
+                toast.querySelector('.toast-message').textContent = 'Error: ' + error.message;
+                toast.querySelector('.toast-content').classList.add('error');
+                
+                // Hide toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    // Remove toast from DOM after hide animation
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 5000);
+            });
+    }
+}

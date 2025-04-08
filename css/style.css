@@ -5,6 +5,7 @@
     --primary-dark: #364fc7;
     --primary-light: #748ffc;
     --secondary-color: #22b8cf;
+    --secondary-color-dark: #1098ad;
     --text-color: #333;
     --text-light: #666;
     --text-lighter: #888;
@@ -319,6 +320,17 @@ main {
 .outline-btn:hover {
     background-color: var(--primary-color);
     color: white;
+}
+
+.secondary-btn {
+    background-color: var(--secondary-color, #6c757d);
+    color: white;
+    border: 1px solid var(--secondary-color, #6c757d);
+}
+
+.secondary-btn:hover {
+    background-color: var(--secondary-color-dark, #5a6268);
+    border-color: var(--secondary-color-dark, #5a6268);
 }
 
 /* Section Styles */
