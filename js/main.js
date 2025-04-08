@@ -41,15 +41,41 @@ function loadNotes(semester) {
         </div>
     `;
     
+    // Set a timeout to handle potential long loading times
+    const timeoutId = setTimeout(() => {
+        console.warn('Firebase request taking longer than expected, might be connection issues');
+    }, 5000);
+    
     // Get notes from Firebase
     database.ref(`notes/${semester}`).once('value')
         .then(snapshot => {
+            clearTimeout(timeoutId);
             const notes = snapshot.val();
+            if (notes) {
+                console.log(`Successfully loaded notes for ${semester}`);
+            } else {
+                console.log(`No notes found for ${semester}`);
+            }
             displayNotes(notes);
         })
         .catch(error => {
+            clearTimeout(timeoutId);
             console.error('Error loading notes:', error);
             displayError();
+            
+            // Try to recover
+            setTimeout(() => {
+                console.log('Attempting to recover from Firebase error...');
+                try {
+                    database.goOffline();
+                    setTimeout(() => {
+                        database.goOnline();
+                        console.log('Firebase reconnected');
+                    }, 1000);
+                } catch (reconnectError) {
+                    console.error('Could not reconnect to Firebase:', reconnectError);
+                }
+            }, 2000);
         });
 }
 

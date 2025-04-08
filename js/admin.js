@@ -42,15 +42,37 @@ function loadAdminNotes(semester) {
     // Update title
     currentSemTitle.textContent = `Semester ${semester.substring(1)} Notes`;
     
+    // Set a timeout to detect long-running requests
+    const timeoutId = setTimeout(() => {
+        console.warn('Firebase admin request taking longer than expected, possible connection issues');
+        // Try to recover silently
+        try {
+            database.goOffline();
+            setTimeout(() => database.goOnline(), 1000);
+        } catch (e) {
+            console.error('Failed to reconnect Firebase:', e);
+        }
+    }, 6000);
+    
     // Get notes from Firebase
     database.ref(`notes/${semester}`).once('value')
         .then(snapshot => {
+            clearTimeout(timeoutId);
             const notes = snapshot.val();
+            console.log(`Admin: loaded notes for ${semester}`, notes ? Object.keys(notes).length : 0, 'entries');
             displayAdminNotes(notes, semester);
         })
         .catch(error => {
+            clearTimeout(timeoutId);
             console.error('Error loading notes for admin:', error);
             displayAdminError();
+            
+            // Add a retry button
+            const retryBtn = document.createElement('button');
+            retryBtn.className = 'btn primary-btn mt-3';
+            retryBtn.textContent = 'Retry';
+            retryBtn.addEventListener('click', () => loadAdminNotes(semester));
+            adminNotesList.appendChild(retryBtn);
         });
 }
 
@@ -179,23 +201,41 @@ function handleAddNote(event) {
         return;
     }
     
+    // Show loading state
+    const submitBtn = document.querySelector('#add-note-form button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Adding...';
+    submitBtn.disabled = true;
+    
     // Save to Firebase
     const newNoteRef = database.ref(`notes/${currentAdminSemester}`).push();
     
     newNoteRef.set({
         title: title,
-        link: link
+        link: link,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
     })
     .then(() => {
         // Reset form
         addNoteForm.reset();
+        
+        // Reset button
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
+        
+        // Show success message
+        alert('Note added successfully!');
         
         // Reload notes
         loadAdminNotes(currentAdminSemester);
     })
     .catch(error => {
         console.error('Error adding note:', error);
-        alert('Error adding note. Please try again.');
+        alert('Error adding note: ' + error.message);
+        
+        // Reset button
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
     });
 }
 

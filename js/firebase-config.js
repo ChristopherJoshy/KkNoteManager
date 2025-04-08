@@ -3,16 +3,29 @@ const firebaseConfig = {
     apiKey: "AIzaSyAT9_9uP7TrAjEKcl6cwkZh9vObpzJKk5s",
     authDomain: "kknotes-3f24e.firebaseapp.com",
     databaseURL: "https://kknotes-3f24e-default-rtdb.firebaseio.com",
-    projectId: "kknotes-3f24e",
+    projectId: "kknotes-3f24e", 
     storageBucket: "kknotes-3f24e.appspot.com",
     appId: "1:254324523644:web:85d5e04ee01b85c4a5a902"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app(); // if already initialized
+}
 
 // Get a reference to the database service
 const database = firebase.database();
+
+// Configure connection monitoring
+firebase.database().ref('.info/connected').on('value', (snap) => {
+    if (snap.val() === true) {
+        console.log('Connected to Firebase');
+    } else {
+        console.log('Disconnected from Firebase');
+    }
+});
 
 // Function to initialize database with default structure if empty
 function initializeDatabase() {
