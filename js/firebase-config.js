@@ -30,14 +30,80 @@ let currentUser = null;
 
 // Default subjects for each semester
 const defaultSubjects = {
-    s1: ["Introduction to Programming", "Digital Logic", "Mathematics I", "Physics", "Communication Skills"],
-    s2: ["Data Structures", "Object-Oriented Programming", "Mathematics II", "Computer Organization", "Environmental Studies"],
-    s3: ["Computer Networks", "Operating Systems", "Database Management", "Theory of Computation", "Web Technologies"],
-    s4: ["Design and Analysis of Algorithms", "Computer Architecture", "Software Engineering", "Web Development", "Probability and Statistics"],
-    s5: ["Artificial Intelligence", "Computer Graphics", "Information Security", "Cloud Computing", "Professional Ethics"],
-    s6: ["Machine Learning", "Data Mining", "Mobile Application Development", "Compiler Design", "Data Warehousing"],
-    s7: ["Big Data Analytics", "Deep Learning", "Internet of Things", "Blockchain Technology", "Project Management"],
-    s8: ["Natural Language Processing", "Augmented Reality", "Parallel Computing", "Quantum Computing", "Capstone Project"]
+    s1: [
+        { id: 1, name: "LINEAR ALGEBRA AND CALCULUS" },
+        { id: 2, name: "ENGINEERING PHYSICS A / ENGINEERING CHEMISTRY" },
+        { id: 3, name: "ENGINEERING MECHANICS / ENGINEERING GRAPHICS" },
+        { id: 4, name: "BASICS OF CIVIL & MECHANICAL ENGINEERING/ BASICS OF ELECTRICAL & ELECTRONICS ENGINEERING" },
+        { id: 5, name: "ENGINEERING PHYSICS LAB / ENGINEERING CHEMISTRY LAB" },
+        { id: 6, name: "CIVIL & MECHANICAL WORKSHOP / ELECTRICAL & ELECTRONICS WORKSHOP" }
+    ],
+    s2: [
+        { id: 1, name: "VECTOR CALCULUS, DIFFERENTIAL EQUATIONS AND TRANSFORMS" },
+        { id: 2, name: "ENGINEERING PHYSICS A / ENGINEERING CHEMISTRY" },
+        { id: 3, name: "ENGINEERING MECHANICS / ENGINEERING GRAPHICS" },
+        { id: 4, name: "BASICS OF CIVIL & MECHANICAL ENGINEERING/ BASICS OF ELECTRICAL & ELECTRONICS ENGINEERING" },
+        { id: 5, name: "ENGINEERING PHYSICS LAB / ENGINEERING CHEMISTRY LAB" },
+        { id: 6, name: "CIVIL & MECHANICAL WORKSHOP / ELECTRICAL & ELECTRONICS WORKSHOP" },
+        { id: 7, name: "PROGRAMMING IN C" }
+    ],
+    s3: [
+        { id: 1, name: "DISCRETE MATHEMATICAL STRUCTURES" },
+        { id: 2, name: "DATA STRUCTURES" },
+        { id: 3, name: "LOGIC SYSTEM DESIGN" },
+        { id: 4, name: "OBJECT ORIENTED PROGRAMMING USING JAVA" },
+        { id: 5, name: "DESIGN & ENGINEERING / PROFESSIONAL ETHICS" },
+        { id: 6, name: "SUSTAINABLE ENGINEERING" },
+        { id: 7, name: "DATA STRUCTURES LAB" },
+        { id: 8, name: "OBJECT ORIENTED PROGRAMMING LAB (IN JAVA)" }
+    ],
+    s4: [
+        { id: 1, name: "GRAPH THEORY" },
+        { id: 2, name: "COMPUTER ORGANIZATION AND ARCHITECTURE" },
+        { id: 3, name: "DATABASE MANAGEMENT SYSTEMS" },
+        { id: 4, name: "OPERATING SYSTEMS" },
+        { id: 5, name: "DESIGN & ENGINEERING / PROFESSIONAL ETHICS" },
+        { id: 6, name: "CONSTITUTION OF INDIA" },
+        { id: 7, name: "DIGITAL LAB" },
+        { id: 8, name: "OPERATING SYSTEMS LAB" }
+    ],
+    s5: [
+        { id: 1, name: "FORMAL LANGUAGES AND AUTOMATA THEORY" },
+        { id: 2, name: "COMPUTER NETWORKS" },
+        { id: 3, name: "SYSTEM SOFTWARE" },
+        { id: 4, name: "MICROPROCESSORS AND MICROCONTROLLERS" },
+        { id: 5, name: "MANAGEMENT OF SOFTWARE SYSTEMS" },
+        { id: 6, name: "DISASTER MANAGEMENT" },
+        { id: 7, name: "SYSTEM SOFTWARE AND MICROPROCESSORS LAB" },
+        { id: 8, name: "DATABASE MANAGEMENT SYSTEMS LAB" }
+    ],
+    s6: [
+        { id: 1, name: "COMPILER DESIGN" },
+        { id: 2, name: "COMPUTER GRAPHICS AND IMAGE PROCESSING" },
+        { id: 3, name: "ALGORITHM ANALYSIS AND DESIGN" },
+        { id: 4, name: "PROGRAM ELECTIVE I" },
+        { id: 5, name: "INDUSTRIAL ECONOMICS & FOREIGN TRADE" },
+        { id: 6, name: "COMPREHENSIVE COURSE WORK" },
+        { id: 7, name: "NETWORKING LAB" },
+        { id: 8, name: "MINIPROJECT" }
+    ],
+    s7: [
+        { id: 1, name: "ARTIFICIAL INTELLIGENCE" },
+        { id: 2, name: "PROGRAM ELECTIVE II" },
+        { id: 3, name: "OPEN ELECTIVE" },
+        { id: 4, name: "INDUSTRIAL SAFETY ENGINEERING" },
+        { id: 5, name: "COMPILER LAB" },
+        { id: 6, name: "SEMINAR" },
+        { id: 7, name: "PROJECT PHASE I" }
+    ],
+    s8: [
+        { id: 1, name: "DISTRIBUTED COMPUTING" },
+        { id: 2, name: "PROGRAM ELECTIVE III" },
+        { id: 3, name: "PROGRAM ELECTIVE IV" },
+        { id: 4, name: "PROGRAM ELECTIVE V" },
+        { id: 5, name: "COMPREHENSIVE COURSE VIVA" },
+        { id: 6, name: "PROJECT PHASE II" }
+    ]
 };
 
 // Test database connection
@@ -132,7 +198,7 @@ function initializeDatabase() {
                 // Create empty structure for default subjects in this semester
                 defaultSubjects[semester].forEach(subject => {
                     // Create a safe key for the subject
-                    const subjectKey = subject.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    const subjectKey = subjectToKey(subject.name);
                     notesStructure[semester][subjectKey] = {};
                 });
             }
@@ -158,7 +224,7 @@ function initializeDatabase() {
                 // Create empty structure for default subjects in this semester
                 defaultSubjects[semester].forEach(subject => {
                     // Create a safe key for the subject
-                    const subjectKey = subject.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    const subjectKey = subjectToKey(subject.name);
                     videosStructure[semester][subjectKey] = {};
                 });
             }
@@ -246,8 +312,8 @@ function keyToSubject(key, semester) {
                 if (snapshot.exists()) {
                     const subjects = snapshot.val();
                     for (let i = 0; i < subjects.length; i++) {
-                        if (subjectToKey(subjects[i]) === key) {
-                            resolve(subjects[i]);
+                        if (subjectToKey(subjects[i].name) === key) {
+                            resolve(subjects[i].name);
                             return;
                         }
                     }

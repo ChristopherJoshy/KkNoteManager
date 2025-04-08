@@ -34,6 +34,20 @@ function initializeAdmin() {
     
     // Load notes for default semester (S1)
     loadAdminNotes(currentAdminSemester);
+    
+    // Set up tab switching
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    if (tabButtons) {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', handleTabChange);
+        });
+    }
+    
+    // Add form handlers
+    const addSubjectForm = document.getElementById('add-subject-form');
+    if (addSubjectForm) {
+        addSubjectForm.addEventListener('submit', handleAddSubject);
+    }
 }
 
 /**
@@ -200,6 +214,19 @@ function handleAdminSemesterChange(event) {
     // Update current semester and load notes
     currentAdminSemester = semester;
     loadAdminNotes(semester);
+    
+    // Update semester title in the subject tab
+    const semNumber = semester.replace('s', '');
+    const currentSubjectsTitle = document.getElementById('current-subjects-title');
+    if (currentSubjectsTitle) {
+        currentSubjectsTitle.textContent = `Semester ${semNumber} Subjects`;
+    }
+    
+    // If the subjects tab is active, also load subjects
+    const subjectsTab = document.getElementById('subjects-tab');
+    if (subjectsTab && subjectsTab.classList.contains('active')) {
+        loadSubjects(semester);
+    }
 }
 
 /**
@@ -654,6 +681,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const manageAdminsBtn = document.getElementById('manage-admins-btn');
     const closeAdminModalBtn = document.getElementById('close-admin-modal');
     const addAdminForm = document.getElementById('add-admin-form');
+    const addSubjectForm = document.getElementById('add-subject-form');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const closeSubjectModalBtn = document.getElementById('close-subject-modal');
+    const cancelEditSubjectBtn = document.getElementById('cancel-edit-subject');
+    const editSubjectForm = document.getElementById('edit-subject-form');
     
     if (testFirebaseBtn) {
         testFirebaseBtn.addEventListener('click', testFirebaseConnection);
@@ -669,6 +701,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (addAdminForm) {
         addAdminForm.addEventListener('submit', handleAddAdmin);
+    }
+    
+    if (addSubjectForm) {
+        addSubjectForm.addEventListener('submit', handleAddSubject);
+    }
+    
+    if (tabButtons) {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', handleTabChange);
+        });
+    }
+    
+    if (closeSubjectModalBtn) {
+        closeSubjectModalBtn.addEventListener('click', closeEditSubjectModal);
+    }
+    
+    if (cancelEditSubjectBtn) {
+        cancelEditSubjectBtn.addEventListener('click', closeEditSubjectModal);
+    }
+    
+    if (editSubjectForm) {
+        editSubjectForm.addEventListener('submit', handleEditSubject);
     }
 });
 
@@ -946,6 +1000,440 @@ function confirmDeleteAdmin(adminId, email) {
             })
             .catch(error => {
                 console.error('Error removing admin:', error);
+                
+                // Update toast to show error
+                toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-times-circle"></i>';
+                toast.querySelector('.toast-message').textContent = 'Error: ' + error.message;
+                toast.querySelector('.toast-content').classList.add('error');
+                
+                // Hide toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    // Remove toast from DOM after hide animation
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 5000);
+            });
+    }
+}
+
+/**
+ * Handle tab change in the admin dashboard
+ * @param {Event} event - The click event
+ */
+function handleTabChange(event) {
+    const clickedTab = event.currentTarget;
+    const tabId = clickedTab.dataset.tab;
+    const tabContent = document.getElementById(tabId);
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    clickedTab.classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    tabContent.classList.add('active');
+    
+    // If switching to subjects tab, load subjects
+    if (tabId === 'subjects-tab') {
+        const activeSemester = document.querySelector('.semester-item.active').dataset.sem;
+        loadSubjects(activeSemester);
+        
+        // Update title
+        const semNumber = activeSemester.replace('s', '');
+        document.getElementById('current-subjects-title').textContent = `Semester ${semNumber} Subjects`;
+    }
+}
+
+/**
+ * Load subjects for a specific semester
+ * @param {string} semester - The semester code (s1, s2, etc.)
+ */
+function loadSubjects(semester) {
+    const subjectsContainer = document.getElementById('admin-subjects-list');
+    if (!subjectsContainer) return;
+    
+    // Show loading
+    subjectsContainer.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading subjects...</p>
+        </div>
+    `;
+    
+    // Get subjects from Firebase
+    database.ref(`subjects/${semester}`).once('value')
+        .then(snapshot => {
+            const subjects = snapshot.val();
+            
+            if (!subjects || subjects.length === 0) {
+                displaySubjectsEmptyState(subjectsContainer);
+                return;
+            }
+            
+            // Clear container
+            subjectsContainer.innerHTML = '';
+            
+            // Sort subjects by ID
+            subjects.sort((a, b) => a.id - b.id);
+            
+            // Add each subject as an item
+            subjects.forEach(subject => {
+                const subjectItem = createSubjectItem(subject, semester);
+                subjectsContainer.appendChild(subjectItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading subjects:', error);
+            displaySubjectsError(subjectsContainer);
+        });
+}
+
+/**
+ * Create a subject item element
+ * @param {Object} subject - The subject object
+ * @param {string} semester - The semester code
+ * @returns {HTMLElement} - The subject item element
+ */
+function createSubjectItem(subject, semester) {
+    const item = document.createElement('div');
+    item.className = 'subject-item';
+    item.dataset.id = subject.id;
+    
+    item.innerHTML = `
+        <div class="subject-info">
+            <span class="subject-id">${subject.id}</span>
+            <span class="subject-name">${subject.name}</span>
+        </div>
+        <div class="subject-actions">
+            <button class="action-btn edit-btn" title="Edit Subject">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete-btn" title="Delete Subject">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    `;
+    
+    // Add event listeners
+    const editBtn = item.querySelector('.edit-btn');
+    const deleteBtn = item.querySelector('.delete-btn');
+    
+    editBtn.addEventListener('click', () => openEditSubjectModal(subject, semester));
+    deleteBtn.addEventListener('click', () => confirmDeleteSubject(subject.id, semester));
+    
+    return item;
+}
+
+/**
+ * Display empty state for subjects
+ * @param {HTMLElement} container - The container element
+ */
+function displaySubjectsEmptyState(container) {
+    container.innerHTML = `
+        <div class="admin-empty-state">
+            <i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <h4>No subjects found</h4>
+            <p>Add subjects using the form below.</p>
+        </div>
+    `;
+}
+
+/**
+ * Display error state for subjects
+ * @param {HTMLElement} container - The container element
+ */
+function displaySubjectsError(container) {
+    container.innerHTML = `
+        <div class="admin-error-state">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <h4>Error loading subjects</h4>
+            <p>There was a problem loading the subjects. Please try again.</p>
+        </div>
+    `;
+}
+
+/**
+ * Handle adding a new subject
+ * @param {Event} event - The form submission event
+ */
+function handleAddSubject(event) {
+    event.preventDefault();
+    
+    const subjectName = document.getElementById('subject-name').value.trim();
+    const activeSemester = document.querySelector('.semester-item.active').dataset.sem;
+    
+    // Simple validation
+    if (!subjectName) {
+        alert('Please enter a subject name');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#add-subject-form button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Adding...';
+    submitBtn.disabled = true;
+    
+    // Show status
+    const uploadStatus = document.getElementById('subject-upload-status');
+    const statusMessage = uploadStatus.querySelector('.status-message');
+    const loadingIcon = uploadStatus.querySelector('.status-loading');
+    const successIcon = uploadStatus.querySelector('.status-success');
+    const errorIcon = uploadStatus.querySelector('.status-error');
+    
+    // Set initial status
+    uploadStatus.classList.remove('hidden');
+    loadingIcon.classList.remove('hidden');
+    successIcon.classList.add('hidden');
+    errorIcon.classList.add('hidden');
+    statusMessage.textContent = 'Adding subject...';
+    
+    // Get current subjects to determine the next ID
+    database.ref(`subjects/${activeSemester}`).once('value')
+        .then(snapshot => {
+            const subjects = snapshot.val() || [];
+            
+            // Find the highest ID
+            let maxId = 0;
+            subjects.forEach(subject => {
+                if (subject && subject.id > maxId) {
+                    maxId = subject.id;
+                }
+            });
+            
+            // Create new subject with ID incremented by 1
+            const newSubject = {
+                id: maxId + 1,
+                name: subjectName
+            };
+            
+            // Add new subject to the array
+            subjects.push(newSubject);
+            
+            // Update Firebase
+            return database.ref(`subjects/${activeSemester}`).set(subjects);
+        })
+        .then(() => {
+            // Reset form
+            document.getElementById('add-subject-form').reset();
+            
+            // Update status
+            loadingIcon.classList.add('hidden');
+            successIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Subject added successfully!';
+            
+            // Reset button
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Hide status after delay
+            setTimeout(() => {
+                uploadStatus.classList.add('hidden');
+            }, 3000);
+            
+            // Reload subjects
+            loadSubjects(activeSemester);
+        })
+        .catch(error => {
+            console.error('Error adding subject:', error);
+            
+            // Update status
+            loadingIcon.classList.add('hidden');
+            errorIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Error: ' + error.message;
+            
+            // Reset button
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Hide status after delay
+            setTimeout(() => {
+                uploadStatus.classList.add('hidden');
+            }, 5000);
+        });
+}
+
+/**
+ * Open modal to edit a subject
+ * @param {Object} subject - The subject object
+ * @param {string} semester - The semester code
+ */
+function openEditSubjectModal(subject, semester) {
+    const editSubjectModal = document.getElementById('edit-subject-modal');
+    const editSubjectNameInput = document.getElementById('edit-subject-name');
+    const editSubjectIdInput = document.getElementById('edit-subject-id');
+    const editSubjectSemesterInput = document.getElementById('edit-subject-semester');
+    
+    if (!editSubjectModal || !editSubjectNameInput || !editSubjectIdInput || !editSubjectSemesterInput) return;
+    
+    // Set form values
+    editSubjectNameInput.value = subject.name;
+    editSubjectIdInput.value = subject.id;
+    editSubjectSemesterInput.value = semester;
+    
+    // Show modal
+    editSubjectModal.classList.remove('hidden');
+}
+
+/**
+ * Close the edit subject modal
+ */
+function closeEditSubjectModal() {
+    const editSubjectModal = document.getElementById('edit-subject-modal');
+    if (!editSubjectModal) return;
+    
+    editSubjectModal.classList.add('hidden');
+}
+
+/**
+ * Handle editing a subject
+ * @param {Event} event - The form submission event
+ */
+function handleEditSubject(event) {
+    event.preventDefault();
+    
+    const subjectName = document.getElementById('edit-subject-name').value.trim();
+    const subjectId = parseInt(document.getElementById('edit-subject-id').value);
+    const semester = document.getElementById('edit-subject-semester').value;
+    
+    // Simple validation
+    if (!subjectName) {
+        alert('Please enter a subject name');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#edit-subject-form button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Saving...';
+    submitBtn.disabled = true;
+    
+    // Show status
+    const uploadStatus = document.getElementById('edit-subject-status');
+    const statusMessage = uploadStatus.querySelector('.status-message');
+    const loadingIcon = uploadStatus.querySelector('.status-loading');
+    const successIcon = uploadStatus.querySelector('.status-success');
+    const errorIcon = uploadStatus.querySelector('.status-error');
+    
+    // Set initial status
+    uploadStatus.classList.remove('hidden');
+    loadingIcon.classList.remove('hidden');
+    successIcon.classList.add('hidden');
+    errorIcon.classList.add('hidden');
+    statusMessage.textContent = 'Updating subject...';
+    
+    // Get current subjects
+    database.ref(`subjects/${semester}`).once('value')
+        .then(snapshot => {
+            const subjects = snapshot.val() || [];
+            
+            // Find the subject by ID
+            const subjectIndex = subjects.findIndex(subject => subject.id === subjectId);
+            
+            if (subjectIndex === -1) {
+                throw new Error('Subject not found');
+            }
+            
+            // Update the subject name
+            subjects[subjectIndex].name = subjectName;
+            
+            // Update Firebase
+            return database.ref(`subjects/${semester}`).set(subjects);
+        })
+        .then(() => {
+            // Update status
+            loadingIcon.classList.add('hidden');
+            successIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Subject updated successfully!';
+            
+            // Reset button
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Close modal after delay
+            setTimeout(() => {
+                closeEditSubjectModal();
+                
+                // Reload subjects
+                loadSubjects(semester);
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Error updating subject:', error);
+            
+            // Update status
+            loadingIcon.classList.add('hidden');
+            errorIcon.classList.remove('hidden');
+            statusMessage.textContent = 'Error: ' + error.message;
+            
+            // Reset button
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+        });
+}
+
+/**
+ * Confirm and delete a subject
+ * @param {number} subjectId - The subject ID
+ * @param {string} semester - The semester code
+ */
+function confirmDeleteSubject(subjectId, semester) {
+    if (confirm(`Are you sure you want to delete this subject? This will also delete all associated notes and videos.`)) {
+        // Create and show a toast notification for deletion status
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                </div>
+                <div class="toast-message">Deleting subject...</div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        // Get current subjects
+        database.ref(`subjects/${semester}`).once('value')
+            .then(snapshot => {
+                const subjects = snapshot.val() || [];
+                
+                // Filter out the subject to delete
+                const updatedSubjects = subjects.filter(subject => subject.id !== subjectId);
+                
+                // Update Firebase
+                return database.ref(`subjects/${semester}`).set(updatedSubjects);
+            })
+            .then(() => {
+                // Update toast to show success
+                toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-check-circle"></i>';
+                toast.querySelector('.toast-message').textContent = 'Subject deleted successfully';
+                toast.querySelector('.toast-content').classList.add('success');
+                
+                // Hide toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    // Remove toast from DOM after hide animation
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+                
+                // Reload subjects
+                loadSubjects(semester);
+            })
+            .catch(error => {
+                console.error('Error deleting subject:', error);
                 
                 // Update toast to show error
                 toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-times-circle"></i>';

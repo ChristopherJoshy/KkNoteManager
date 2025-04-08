@@ -97,36 +97,78 @@
                 </div>
                 
                 <div class="dashboard-main">
-                    <div class="edit-section">
-                        <h3 id="current-sem-title">Semester 1 Notes</h3>
-                        <div class="notes-list" id="admin-notes-list">
-                            <div class="loading-spinner">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <p>Loading notes...</p>
+                    <div class="tab-container">
+                        <div class="tab-header">
+                            <button class="tab-btn active" data-tab="notes-tab">Notes Management</button>
+                            <button class="tab-btn" data-tab="subjects-tab">Subjects Management</button>
+                        </div>
+                        
+                        <!-- Notes Tab -->
+                        <div class="tab-content active" id="notes-tab">
+                            <div class="edit-section">
+                                <h3 id="current-sem-title">Semester 1 Notes</h3>
+                                <div class="notes-list" id="admin-notes-list">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Loading notes...</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="add-note-section">
+                                    <h4>Add New Note</h4>
+                                    <form id="add-note-form" class="add-note-form">
+                                        <div class="form-group">
+                                            <label for="note-title">Title</label>
+                                            <input type="text" id="note-title" name="note-title" required placeholder="e.g., Data Structures">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="note-link">Google Drive Link</label>
+                                            <input type="url" id="note-link" name="note-link" required placeholder="https://drive.google.com/...">
+                                        </div>
+                                        <div id="upload-status" class="upload-status hidden">
+                                            <div class="status-icon">
+                                                <i class="fas fa-circle-notch fa-spin status-loading"></i>
+                                                <i class="fas fa-check-circle status-success hidden"></i>
+                                                <i class="fas fa-times-circle status-error hidden"></i>
+                                            </div>
+                                            <div class="status-message">Processing...</div>
+                                        </div>
+                                        <button type="submit" class="btn primary-btn">Add Note <i class="fas fa-plus"></i></button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="add-note-section">
-                            <h4>Add New Note</h4>
-                            <form id="add-note-form" class="add-note-form">
-                                <div class="form-group">
-                                    <label for="note-title">Title</label>
-                                    <input type="text" id="note-title" name="note-title" required placeholder="e.g., Data Structures">
-                                </div>
-                                <div class="form-group">
-                                    <label for="note-link">Google Drive Link</label>
-                                    <input type="url" id="note-link" name="note-link" required placeholder="https://drive.google.com/...">
-                                </div>
-                                <div id="upload-status" class="upload-status hidden">
-                                    <div class="status-icon">
-                                        <i class="fas fa-circle-notch fa-spin status-loading"></i>
-                                        <i class="fas fa-check-circle status-success hidden"></i>
-                                        <i class="fas fa-times-circle status-error hidden"></i>
+                        <!-- Subjects Tab -->
+                        <div class="tab-content" id="subjects-tab">
+                            <div class="edit-section">
+                                <h3 id="current-subjects-title">Semester 1 Subjects</h3>
+                                <div class="subjects-list" id="admin-subjects-list">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Loading subjects...</p>
                                     </div>
-                                    <div class="status-message">Processing...</div>
                                 </div>
-                                <button type="submit" class="btn primary-btn">Add Note <i class="fas fa-plus"></i></button>
-                            </form>
+                                
+                                <div class="add-subject-section">
+                                    <h4>Add New Subject</h4>
+                                    <form id="add-subject-form" class="add-subject-form">
+                                        <div class="form-group">
+                                            <label for="subject-name">Subject Name</label>
+                                            <input type="text" id="subject-name" name="subject-name" required placeholder="e.g., LINEAR ALGEBRA AND CALCULUS">
+                                        </div>
+                                        <div id="subject-upload-status" class="upload-status hidden">
+                                            <div class="status-icon">
+                                                <i class="fas fa-circle-notch fa-spin status-loading"></i>
+                                                <i class="fas fa-check-circle status-success hidden"></i>
+                                                <i class="fas fa-times-circle status-error hidden"></i>
+                                            </div>
+                                            <div class="status-message">Processing...</div>
+                                        </div>
+                                        <button type="submit" class="btn primary-btn">Add Subject <i class="fas fa-plus"></i></button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -178,6 +220,42 @@
                                 <div class="status-message">Processing...</div>
                             </div>
                             <button type="submit" class="btn primary-btn">Add Administrator <i class="fas fa-plus"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit Subject Modal -->
+            <div id="edit-subject-modal" class="modal-backdrop hidden">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>Edit Subject</h3>
+                        <button class="close-modal" id="close-subject-modal">&times;</button>
+                    </div>
+                    
+                    <div class="edit-subject-section">
+                        <form id="edit-subject-form" class="edit-subject-form">
+                            <input type="hidden" id="edit-subject-id" name="edit-subject-id">
+                            <input type="hidden" id="edit-subject-semester" name="edit-subject-semester">
+                            
+                            <div class="form-group">
+                                <label for="edit-subject-name">Subject Name</label>
+                                <input type="text" id="edit-subject-name" name="edit-subject-name" required placeholder="e.g., LINEAR ALGEBRA AND CALCULUS">
+                            </div>
+                            
+                            <div id="edit-subject-status" class="upload-status hidden">
+                                <div class="status-icon">
+                                    <i class="fas fa-circle-notch fa-spin status-loading"></i>
+                                    <i class="fas fa-check-circle status-success hidden"></i>
+                                    <i class="fas fa-times-circle status-error hidden"></i>
+                                </div>
+                                <div class="status-message">Processing...</div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary-btn">Save Changes</button>
+                                <button type="button" id="cancel-edit-subject" class="btn outline-btn">Cancel</button>
+                            </div>
                         </form>
                     </div>
                 </div>

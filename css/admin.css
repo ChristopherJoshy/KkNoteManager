@@ -318,6 +318,51 @@
     color: var(--primary-color);
 }
 
+/* Tab Container */
+.tab-container {
+    width: 100%;
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+.tab-header {
+    display: flex;
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-color);
+    transition: all var(--transition-fast);
+    flex: 1;
+    text-align: center;
+}
+
+.tab-btn:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.tab-btn.active {
+    border-bottom-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+    padding: var(--spacing-md);
+}
+
+.tab-content.active {
+    display: block;
+}
+
 /* Admin Notes List */
 .admin-note-item {
     background-color: white;
@@ -502,6 +547,74 @@
     flex: 1;
     font-size: var(--font-size-sm);
     font-weight: 500;
+}
+
+/* Subjects Management Styles */
+.subjects-list {
+    margin-bottom: var(--spacing-lg);
+}
+
+.subject-item {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.subject-item:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.subject-info {
+    flex: 1;
+}
+
+.subject-id {
+    display: inline-block;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    font-size: var(--font-size-sm);
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: var(--spacing-sm);
+}
+
+.subject-name {
+    font-weight: 500;
+    display: inline-block;
+}
+
+.subject-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.add-subject-section {
+    margin-top: var(--spacing-xl);
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.add-subject-section h4 {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-color);
+}
+
+.add-subject-form {
+    max-width: 100%;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
 }
 
 /* Admin Management Styles */
